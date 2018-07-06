@@ -179,7 +179,7 @@ static rtk_api_ret_t _rtk_int_advanceInfo_get(rtk_int_advType_t adv_type, rtk_in
 {
     rtk_api_ret_t   retVal;
     rtk_uint32      data;
-    rtk_uint32      intAdvType;
+    rtk_uint32      intAdvType = 0;
 
     /* Check initialization state */
     RTK_CHK_INIT_STATE();
@@ -503,7 +503,7 @@ rtk_api_ret_t rtk_int_status_get(rtk_int_status_t* pStatusMask)
  */
 rtk_api_ret_t rtk_int_advanceInfo_get(rtk_int_advType_t adv_type, rtk_int_info_t *pInfo)
 {
-     rtk_api_ret_t retVal;
+    rtk_api_ret_t retVal;
     
     RTK_API_LOCK();
     retVal = _rtk_int_advanceInfo_get(adv_type, pInfo);    

@@ -179,3 +179,16 @@ cp -rf $STANDALONE_DIR/common/*.h $BSP_DIR/include/
 cp $BOARD_DIR/inbyte.c $BSP_DIR/libsrc/standalone/src/
 cp $BOARD_DIR/outbyte.c $BSP_DIR/libsrc/standalone/src/
 cp ../misc/xipipsu_g.c $BSP_DIR/libsrc/ipipsu/src/
+
+
+# copy Realtek Switch API while Board is edpu
+if [ $BOARD == "edpu" ]; then
+    RTL_API_DIR=$EMBEDDED_SW_DIR/ThirdParty/sw_services/Realtek_Unmanaged_Switch_API_V1.3.12/API_Source
+    RTL_LIB_DIR=$BSP_DIR/libsrc/rtl/src
+    
+    mkdir -p $RTL_LIB_DIR
+    
+    echo "Copy Realtek Switch API to $RTL_LIB_DIR"
+    cp -rf $RTL_API_DIR/* $RTL_LIB_DIR
+fi
+

@@ -856,6 +856,180 @@ static void XFsbl_PcieReset(void)
 }
 #endif
 #endif
+
+
+#if defined(XPS_BOARD_EDPU)
+#include <rtk_types.h>
+#include <rtk_switch.h>
+#include <smi.h>
+#include <port.h>
+#include <rtl8367c_asicdrv_port.h>
+
+XEmacPs Mac;
+XEmacPs *EmacPsInstancePtr = &Mac;
+u32 PhyAddress = 0;
+
+rtk_int32 smi_read(rtk_uint32 mAddrs, rtk_uint32 *rData)
+{
+	int Status;
+	u16 data;
+	
+	Status = XEmacPs_PhyWrite(EmacPsInstancePtr, PhyAddress, MDC_MDIO_CTRL0_REG, MDC_MDIO_ADDR_OP);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	Status = XEmacPs_PhyWrite(EmacPsInstancePtr, PhyAddress, MDC_MDIO_ADDRESS_REG, mAddrs);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	Status = XEmacPs_PhyWrite(EmacPsInstancePtr, PhyAddress, MDC_MDIO_CTRL1_REG, MDC_MDIO_READ_OP);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	Status = XEmacPs_PhyRead(EmacPsInstancePtr, PhyAddress, MDC_MDIO_DATA_READ_REG, &data);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	*rData = data;
+	return RT_ERR_OK;
+}
+
+rtk_int32 smi_write(rtk_uint32 mAddrs, rtk_uint32 rData)
+{
+	int Status;
+
+	Status = XEmacPs_PhyWrite(EmacPsInstancePtr, PhyAddress, MDC_MDIO_CTRL0_REG, MDC_MDIO_ADDR_OP);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	Status = XEmacPs_PhyWrite(EmacPsInstancePtr, PhyAddress, MDC_MDIO_ADDRESS_REG, mAddrs);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	Status = XEmacPs_PhyWrite(EmacPsInstancePtr, PhyAddress, MDC_MDIO_DATA_WRITE_REG, rData);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	Status = XEmacPs_PhyWrite(EmacPsInstancePtr, PhyAddress, MDC_MDIO_CTRL1_REG, MDC_MDIO_WRITE_OP);
+	if (Status != XST_SUCCESS) {
+		return RT_ERR_FAILED;
+	}
+
+	return RT_ERR_OK;
+}
+
+static u32 XFsbl_InitGem(u16 DeviceID)
+{
+	int Status = XST_SUCCESS;
+	XEmacPs_Config* Cfg;
+
+	Cfg = XEmacPs_LookupConfig(DeviceID);
+
+	Status = XEmacPs_CfgInitialize(EmacPsInstancePtr, Cfg,
+							Cfg->BaseAddress);
+	if (Status != XST_SUCCESS) {
+		return XST_FAILURE;
+	}
+
+	XEmacPs_SetMdioDivisor(EmacPsInstancePtr, MDC_DIV_224);
+
+	return XST_SUCCESS;
+}
+
+
+static u32 XFsbl_InitReltekSwitch(u16 DeviceID)
+{
+	int Status;
+	rtk_mode_ext_t macMode;
+	rtk_api_ret_t rtl_ret;
+	rtk_port_mac_ability_t macPortability;
+	rtk_data_t txDelay, rxDelay;
+
+	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Initial Realtek Switch %d\r\n", DeviceID);
+	
+	Status = XFsbl_InitGem(DeviceID);
+	if (Status != XST_SUCCESS) {
+		return XST_FAILURE;
+	}
+
+	rtl_ret = rtk_switch_init();
+	if (rtl_ret != RT_ERR_OK){
+		return XST_FAILURE;
+	}
+
+	memset(&macPortability, 0, sizeof(rtk_port_mac_ability_t));
+	rtl_ret = rtk_port_macForceLinkExt_get(EXT_PORT0, &macMode, &macPortability);
+	if (rtl_ret != RT_ERR_OK){
+		return XST_FAILURE;
+	}
+
+	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Current settings:\n");
+	
+	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "macMode=%d, forcemode=%d, link=%d, nway=%d\r\n", 
+			macMode, macPortability.forcemode, macPortability.link, macPortability.nway);
+
+	macMode = MODE_EXT_RGMII;
+	macPortability.forcemode = MAC_FORCE;
+	macPortability.speed = SPD_1000M;
+	macPortability.link = PORT_LINKUP;
+	macPortability.duplex = FULL_DUPLEX;
+	macPortability.nway = DISABLED;
+	macPortability.txpause = ENABLED;
+	macPortability.rxpause = ENABLED;
+	rtl_ret = rtk_port_macForceLinkExt_set(EXT_PORT0, macMode, &macPortability);
+	if (rtl_ret != RT_ERR_OK){
+		return XST_FAILURE;
+	}
+
+	rtl_ret = rtk_port_rgmiiDelayExt_get(EXT_PORT0, &txDelay, &rxDelay);
+	if (rtl_ret != RT_ERR_OK){
+		return XST_FAILURE;
+	}
+	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "txDealy=%d, rxDelay=%d\r\n", 
+				txDelay, rxDelay);
+
+	txDelay = 1;
+	rxDelay = 7;
+	rtl_ret = rtk_port_rgmiiDelayExt_set(EXT_PORT0, txDelay, rxDelay);
+	if (rtl_ret != RT_ERR_OK){
+		return XST_FAILURE;
+	}
+	return XST_SUCCESS;
+}
+
+
+static u32 XFsbl_BoardConfig(void)
+{
+	int Status = XST_SUCCESS;
+
+	Status = XFsbl_InitReltekSwitch(XPAR_PSU_ETHERNET_0_DEVICE_ID);
+	if (Status != XST_SUCCESS) {
+		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Realtek Switch 1 failed\r\n");
+		return XST_FAILURE;
+	}
+
+	Status = XFsbl_InitReltekSwitch(XPAR_PSU_ETHERNET_1_DEVICE_ID);
+	if (Status != XST_SUCCESS) {
+		return XST_FAILURE;
+	}
+
+	return XST_SUCCESS;
+}
+
+static void XFsbl_UsbPhyReset(void)
+{
+}
+
+
+
+#endif
 /*****************************************************************************/
 /**
  * This function does board specific initialization.
@@ -873,7 +1047,7 @@ u32 XFsbl_BoardInit(void)
 {
 	u32 Status;
 #if defined(XPS_BOARD_ZCU102) || defined(XPS_BOARD_ZCU106)		\
-		|| defined(XPS_BOARD_ZCU104) || defined(XPS_BOARD_ZCU111)
+		|| defined(XPS_BOARD_ZCU104) || defined(XPS_BOARD_ZCU111) || defined(XPS_BOARD_EDPU)
 	/* Program I2C to configure GT lanes */
 	Status = XFsbl_BoardConfig();
 	if (Status != XFSBL_SUCCESS) {

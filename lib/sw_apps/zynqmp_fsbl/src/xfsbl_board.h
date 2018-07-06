@@ -171,6 +171,11 @@ typedef struct XVoutCommands {
 
 /************************** Function Prototypes ******************************/
 #endif
+
+#if defined(XPS_BOARD_EDPU)
+#include "xemacps.h"
+#endif
+
 u32 XFsbl_BoardInit(void);
 
 #ifdef __cplusplus
