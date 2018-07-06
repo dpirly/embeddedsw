@@ -187,7 +187,9 @@ static void _smi_stop(void)
 
 #endif /* End of #if defined(MDC_MDIO_OPERATION) || defined(SPI_OPERATION) */
 
-rtk_int32 smi_read(rtk_uint32 mAddrs, rtk_uint32 *rData)
+#define __weak		__attribute__((weak))
+
+rtk_int32 __weak smi_read(rtk_uint32 mAddrs, rtk_uint32 *rData)
 {
 #if (!defined(MDC_MDIO_OPERATION) && !defined(SPI_OPERATION))
     rtk_uint32 rawData=0, ACK;
@@ -303,7 +305,7 @@ rtk_int32 smi_read(rtk_uint32 mAddrs, rtk_uint32 *rData)
 
 
 
-rtk_int32 smi_write(rtk_uint32 mAddrs, rtk_uint32 rData)
+rtk_int32 __weak smi_write(rtk_uint32 mAddrs, rtk_uint32 rData)
 {
 #if (!defined(MDC_MDIO_OPERATION) && !defined(SPI_OPERATION))
     rtk_int8 con;
