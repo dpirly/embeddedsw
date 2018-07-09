@@ -938,7 +938,7 @@ static u32 XFsbl_InitGem(u16 DeviceID)
 		return XST_FAILURE;
 	}
 
-	XEmacPs_SetMdioDivisor(EmacPsInstancePtr, MDC_DIV_224);
+	XEmacPs_SetMdioDivisor(EmacPsInstancePtr, MDC_DIV_128);
 
 	return XST_SUCCESS;
 }
@@ -952,15 +952,15 @@ static u32 XFsbl_InitReltekSwitch(u16 DeviceID)
 	rtk_port_mac_ability_t macPortability;
 	rtk_data_t txDelay, rxDelay;
 
-	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Initial Realtek Switch %d\r\n", DeviceID);
-	
 	Status = XFsbl_InitGem(DeviceID);
 	if (Status != XST_SUCCESS) {
+		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "XFsbl_InitGem failed\r\n");
 		return XST_FAILURE;
 	}
 
 	rtl_ret = rtk_switch_init();
 	if (rtl_ret != RT_ERR_OK){
+		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "call rtk_switch_init() failed");
 		return XST_FAILURE;
 	}
 
@@ -970,9 +970,9 @@ static u32 XFsbl_InitReltekSwitch(u16 DeviceID)
 		return XST_FAILURE;
 	}
 
-	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Current settings:\n");
+	XFsbl_Printf(DEBUG_GENERAL, "Current settings:\r\n");
 	
-	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "macMode=%d, forcemode=%d, link=%d, nway=%d\r\n", 
+	XFsbl_Printf(DEBUG_GENERAL, "macMode=%d, forcemode=%d, link=%d, nway=%d\r\n", 
 			macMode, macPortability.forcemode, macPortability.link, macPortability.nway);
 
 	macMode = MODE_EXT_RGMII;
@@ -992,7 +992,7 @@ static u32 XFsbl_InitReltekSwitch(u16 DeviceID)
 	if (rtl_ret != RT_ERR_OK){
 		return XST_FAILURE;
 	}
-	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "txDealy=%d, rxDelay=%d\r\n", 
+	XFsbl_Printf(DEBUG_GENERAL, "txDealy=%d, rxDelay=%d\r\n", 
 				txDelay, rxDelay);
 
 	txDelay = 1;
@@ -1004,20 +1004,38 @@ static u32 XFsbl_InitReltekSwitch(u16 DeviceID)
 	return XST_SUCCESS;
 }
 
-
-static u32 XFsbl_BoardConfig(void)
-{
+static u32 XFsbl_InitSwitchs(void){
 	int Status = XST_SUCCESS;
 
 	Status = XFsbl_InitReltekSwitch(XPAR_PSU_ETHERNET_0_DEVICE_ID);
 	if (Status != XST_SUCCESS) {
-		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Realtek Switch 1 failed\r\n");
 		return XST_FAILURE;
 	}
 
 	Status = XFsbl_InitReltekSwitch(XPAR_PSU_ETHERNET_1_DEVICE_ID);
 	if (Status != XST_SUCCESS) {
 		return XST_FAILURE;
+	}
+
+	return XST_SUCCESS;
+}
+
+static u32 XFsbl_BoardConfig(void)
+{
+	int Status;
+
+	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Board:   Welzek T6290E eDPU\r\n");
+	
+	/* waiting for switch power-up */
+	usleep(100*1000);
+	
+	XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Switch:  ");
+	Status = XFsbl_InitSwitchs();
+	if (Status != XST_SUCCESS) {
+		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "Failed\r\n");
+		return XST_FAILURE;
+	}else{
+		XFsbl_Printf(DEBUG_PRINT_ALWAYS, "OK\r\n");
 	}
 
 	return XST_SUCCESS;
