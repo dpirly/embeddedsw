@@ -995,12 +995,20 @@ static u32 XFsbl_InitReltekSwitch(u16 DeviceID)
 	XFsbl_Printf(DEBUG_GENERAL, "txDealy=%d, rxDelay=%d\r\n", 
 				txDelay, rxDelay);
 
+/*
+  The API is used to set RGMII interface TX and RX delay. In TX delay, the value 1 means delay 2ns and
+  0 means no delay. In RX delay, there are 8 steps to tune the delay status.
+  */
 	txDelay = 1;
-	rxDelay = 7;
+	//txDelay = 0; // can not rx data
+	
+	//rxDelay = 7;
+	//rxDelay = 4; //default
 	rtl_ret = rtk_port_rgmiiDelayExt_set(EXT_PORT0, txDelay, rxDelay);
 	if (rtl_ret != RT_ERR_OK){
 		return XST_FAILURE;
 	}
+
 	return XST_SUCCESS;
 }
 
