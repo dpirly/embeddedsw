@@ -1271,7 +1271,7 @@ unsigned long psu_clock_init_data(void)
     *  PSU_CRL_APB_PL0_REF_CTRL_DIVISOR1                           0x1
 
     * 6 bit divider
-    *  PSU_CRL_APB_PL0_REF_CTRL_DIVISOR0                           0xa
+    *  PSU_CRL_APB_PL0_REF_CTRL_DIVISOR0                           0x5
 
     * 000 = IOPLL; 010 = RPLL; 011 = DPLL; (This signal may only be toggled af
     * ter 4 cycles of the old clock and 4 cycles of the new clock. This is not
@@ -1279,10 +1279,34 @@ unsigned long psu_clock_init_data(void)
     *  PSU_CRL_APB_PL0_REF_CTRL_SRCSEL                             0x0
 
     * This register controls this reference clock
-    * (OFFSET, MASK, VALUE)      (0XFF5E00C0, 0x013F3F07U ,0x01010A00U)
+    * (OFFSET, MASK, VALUE)      (0XFF5E00C0, 0x013F3F07U ,0x01010500U)
     */
 	PSU_Mask_Write(CRL_APB_PL0_REF_CTRL_OFFSET,
-		0x013F3F07U, 0x01010A00U);
+		0x013F3F07U, 0x01010500U);
+/*##################################################################### */
+
+    /*
+    * Register : PL1_REF_CTRL @ 0XFF5E00C4
+
+    * Clock active signal. Switch to 0 to disable the clock
+    *  PSU_CRL_APB_PL1_REF_CTRL_CLKACT                             0x1
+
+    * 6 bit divider
+    *  PSU_CRL_APB_PL1_REF_CTRL_DIVISOR1                           0x1
+
+    * 6 bit divider
+    *  PSU_CRL_APB_PL1_REF_CTRL_DIVISOR0                           0x4
+
+    * 000 = IOPLL; 010 = RPLL; 011 = DPLL; (This signal may only be toggled af
+    * ter 4 cycles of the old clock and 4 cycles of the new clock. This is not
+    *  usually an issue, but designers must be aware.)
+    *  PSU_CRL_APB_PL1_REF_CTRL_SRCSEL                             0x0
+
+    * This register controls this reference clock
+    * (OFFSET, MASK, VALUE)      (0XFF5E00C4, 0x013F3F07U ,0x01010400U)
+    */
+	PSU_Mask_Write(CRL_APB_PL1_REF_CTRL_OFFSET,
+		0x013F3F07U, 0x01010400U);
 /*##################################################################### */
 
     /*
@@ -21034,11 +21058,30 @@ unsigned long psu_afi_config(void)
     *  width 11: reserved
     *  PSU_FPD_SLCR_AFI_FS_DW_SS0_SEL                              0x2
 
+    * Select the 32/64/128-bit data width selection for the Slave 1 00: 32-bit
+    *  AXI data width (default) 01: 64-bit AXI data width 10: 128-bit AXI data
+    *  width 11: reserved
+    *  PSU_FPD_SLCR_AFI_FS_DW_SS1_SEL                              0x2
+
     * afi fs SLCR control register. This register is static and should not be
     * modified during operation.
-    * (OFFSET, MASK, VALUE)      (0XFD615000, 0x00000300U ,0x00000200U)
+    * (OFFSET, MASK, VALUE)      (0XFD615000, 0x00000F00U ,0x00000A00U)
     */
-	PSU_Mask_Write(FPD_SLCR_AFI_FS_OFFSET, 0x00000300U, 0x00000200U);
+	PSU_Mask_Write(FPD_SLCR_AFI_FS_OFFSET, 0x00000F00U, 0x00000A00U);
+/*##################################################################### */
+
+    /*
+    * Register : afi_fs @ 0XFF419000
+
+    * Select the 32/64/128-bit data width selection for the Slave 0 00: 32-bit
+    *  AXI data width (default) 01: 64-bit AXI data width 10: 128-bit AXI data
+    *  width 11: reserved
+    *  PSU_LPD_SLCR_AFI_FS_DW_SS2_SEL                              0x0
+
+    * afi fs SLCR control register. Do not change the bits durin
+    * (OFFSET, MASK, VALUE)      (0XFF419000, 0x00000300U ,0x00000000U)
+    */
+	PSU_Mask_Write(LPD_SLCR_AFI_FS_OFFSET, 0x00000300U, 0x00000000U);
 /*##################################################################### */
 
     /*

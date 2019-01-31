@@ -949,6 +949,8 @@
 #define CRL_APB_ADMA_REF_CTRL_OFFSET                                               0XFF5E00B8
 #undef CRL_APB_PL0_REF_CTRL_OFFSET 
 #define CRL_APB_PL0_REF_CTRL_OFFSET                                                0XFF5E00C0
+#undef CRL_APB_PL1_REF_CTRL_OFFSET 
+#define CRL_APB_PL1_REF_CTRL_OFFSET                                                0XFF5E00C4
 #undef CRL_APB_AMS_REF_CTRL_OFFSET 
 #define CRL_APB_AMS_REF_CTRL_OFFSET                                                0XFF5E0108
 #undef CRL_APB_DLL_REF_CTRL_OFFSET 
@@ -1697,6 +1699,48 @@
 #define CRL_APB_PL0_REF_CTRL_SRCSEL_DEFVAL                     0x00052000
 #define CRL_APB_PL0_REF_CTRL_SRCSEL_SHIFT                      0
 #define CRL_APB_PL0_REF_CTRL_SRCSEL_MASK                       0x00000007U
+
+/*
+* Clock active signal. Switch to 0 to disable the clock
+*/
+#undef CRL_APB_PL1_REF_CTRL_CLKACT_DEFVAL 
+#undef CRL_APB_PL1_REF_CTRL_CLKACT_SHIFT 
+#undef CRL_APB_PL1_REF_CTRL_CLKACT_MASK 
+#define CRL_APB_PL1_REF_CTRL_CLKACT_DEFVAL                     0x00052000
+#define CRL_APB_PL1_REF_CTRL_CLKACT_SHIFT                      24
+#define CRL_APB_PL1_REF_CTRL_CLKACT_MASK                       0x01000000U
+
+/*
+* 6 bit divider
+*/
+#undef CRL_APB_PL1_REF_CTRL_DIVISOR1_DEFVAL 
+#undef CRL_APB_PL1_REF_CTRL_DIVISOR1_SHIFT 
+#undef CRL_APB_PL1_REF_CTRL_DIVISOR1_MASK 
+#define CRL_APB_PL1_REF_CTRL_DIVISOR1_DEFVAL                   0x00052000
+#define CRL_APB_PL1_REF_CTRL_DIVISOR1_SHIFT                    16
+#define CRL_APB_PL1_REF_CTRL_DIVISOR1_MASK                     0x003F0000U
+
+/*
+* 6 bit divider
+*/
+#undef CRL_APB_PL1_REF_CTRL_DIVISOR0_DEFVAL 
+#undef CRL_APB_PL1_REF_CTRL_DIVISOR0_SHIFT 
+#undef CRL_APB_PL1_REF_CTRL_DIVISOR0_MASK 
+#define CRL_APB_PL1_REF_CTRL_DIVISOR0_DEFVAL                   0x00052000
+#define CRL_APB_PL1_REF_CTRL_DIVISOR0_SHIFT                    8
+#define CRL_APB_PL1_REF_CTRL_DIVISOR0_MASK                     0x00003F00U
+
+/*
+* 000 = IOPLL; 010 = RPLL; 011 = DPLL; (This signal may only be toggled af
+    * ter 4 cycles of the old clock and 4 cycles of the new clock. This is not
+    *  usually an issue, but designers must be aware.)
+*/
+#undef CRL_APB_PL1_REF_CTRL_SRCSEL_DEFVAL 
+#undef CRL_APB_PL1_REF_CTRL_SRCSEL_SHIFT 
+#undef CRL_APB_PL1_REF_CTRL_SRCSEL_MASK 
+#define CRL_APB_PL1_REF_CTRL_SRCSEL_DEFVAL                     0x00052000
+#define CRL_APB_PL1_REF_CTRL_SRCSEL_SHIFT                      0
+#define CRL_APB_PL1_REF_CTRL_SRCSEL_MASK                       0x00000007U
 
 /*
 * 6 bit divider
@@ -37389,6 +37433,8 @@
 #define CRL_APB_RST_LPD_TOP_OFFSET                                                 0XFF5E023C
 #undef FPD_SLCR_AFI_FS_OFFSET 
 #define FPD_SLCR_AFI_FS_OFFSET                                                     0XFD615000
+#undef LPD_SLCR_AFI_FS_OFFSET 
+#define LPD_SLCR_AFI_FS_OFFSET                                                     0XFF419000
 #undef AFIFM2_AFIFM_RDCTRL_OFFSET 
 #define AFIFM2_AFIFM_RDCTRL_OFFSET                                                 0XFD380000
 #undef AFIFM2_AFIFM_WRCTRL_OFFSET 
@@ -37475,6 +37521,30 @@
 #define FPD_SLCR_AFI_FS_DW_SS0_SEL_DEFVAL                      0x00000A00
 #define FPD_SLCR_AFI_FS_DW_SS0_SEL_SHIFT                       8
 #define FPD_SLCR_AFI_FS_DW_SS0_SEL_MASK                        0x00000300U
+
+/*
+* Select the 32/64/128-bit data width selection for the Slave 1 00: 32-bit
+    *  AXI data width (default) 01: 64-bit AXI data width 10: 128-bit AXI data
+    *  width 11: reserved
+*/
+#undef FPD_SLCR_AFI_FS_DW_SS1_SEL_DEFVAL 
+#undef FPD_SLCR_AFI_FS_DW_SS1_SEL_SHIFT 
+#undef FPD_SLCR_AFI_FS_DW_SS1_SEL_MASK 
+#define FPD_SLCR_AFI_FS_DW_SS1_SEL_DEFVAL                      0x00000A00
+#define FPD_SLCR_AFI_FS_DW_SS1_SEL_SHIFT                       10
+#define FPD_SLCR_AFI_FS_DW_SS1_SEL_MASK                        0x00000C00U
+
+/*
+* Select the 32/64/128-bit data width selection for the Slave 0 00: 32-bit
+    *  AXI data width (default) 01: 64-bit AXI data width 10: 128-bit AXI data
+    *  width 11: reserved
+*/
+#undef LPD_SLCR_AFI_FS_DW_SS2_SEL_DEFVAL 
+#undef LPD_SLCR_AFI_FS_DW_SS2_SEL_SHIFT 
+#undef LPD_SLCR_AFI_FS_DW_SS2_SEL_MASK 
+#define LPD_SLCR_AFI_FS_DW_SS2_SEL_DEFVAL                      0x00000200
+#define LPD_SLCR_AFI_FS_DW_SS2_SEL_SHIFT                       8
+#define LPD_SLCR_AFI_FS_DW_SS2_SEL_MASK                        0x00000300U
 
 /*
 * Configures the Read Channel Fabric interface width. 2'b11 : Reserved 2'b
